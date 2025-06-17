@@ -1,0 +1,96 @@
+.header {
+    background-color: var(--bg-secondary);
+    padding: 1rem 0;
+    box-shadow: 0 1px 3px var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.logo-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+}
+
+.logo-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Theme Switcher - Headlight Style */
+.theme-switcher {
+    position: relative;
+    width: 120px;
+    height: 50px;
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    border-radius: 25px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5), 0 1px 2px rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.theme-knob {
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle at 30% 30%, #e0e0e0, #808080);
+    border-radius: 50%;
+    position: absolute;
+    left: 5px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 2px rgba(0,0,0,0.2);
+}
+
+.theme-knob::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 2px;
+    background: #333;
+    box-shadow: 0 8px 0 #333, 0 -8px 0 #333;
+}
+
+.theme-switcher[data-theme="light"] .theme-knob {
+    left: 40px;
+    background: radial-gradient(circle at 30% 30%, #f0f0f0, #c0c0c0);
+}
+
+.theme-switcher[data-theme="auto"] .theme-knob {
+    left: 75px;
+    background: radial-gradient(circle at 30% 30%, #FFD700, #FFA500);
+}
+
+.theme-labels {
+    position: absolute;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    font-size: 0.65rem;
+    color: #666;
+    font-weight: 600;
+    pointer-events: none;
+    bottom: -20px;
+}

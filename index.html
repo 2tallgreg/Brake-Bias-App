@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brake Bias - Car Review Aggregator</title>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/components/header.css">
+    <link rel="stylesheet" href="css/components/search.css">
+    <link rel="stylesheet" href="css/components/results.css">
+    <link rel="stylesheet" href="css/components/loading.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <img src="assets/images/logo.png" alt="Brake Bias" class="logo-img">
+                <div class="logo-text">Brake Bias</div>
+            </div>
+            <div class="theme-switcher" data-theme="dark">
+                <div class="theme-knob"></div>
+                <div class="theme-labels">
+                    <span>OFF</span>
+                    <span>ON</span>
+                    <span>AUTO</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Search Section -->
+        <section class="search-section">
+            <h2>Find Your Vehicle</h2>
+            <div class="search-grid">
+                <div class="input-group">
+                    <label for="year">Year</label>
+                    <select id="year">
+                        <option value="">Select Year</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="make">Make</label>
+                    <select id="make" disabled>
+                        <option value="">Select Make</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="model">Model</label>
+                    <select id="model" disabled>
+                        <option value="">Select Model</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="submodel">Submodel (Optional)</label>
+                    <input type="text" id="submodel" placeholder="e.g., Sport, Limited">
+                </div>
+                <div class="input-group">
+                    <label for="zipcode">Zip Code</label>
+                    <input type="text" id="zipcode" placeholder="12345" maxlength="5">
+                </div>
+            </div>
+            <button class="search-button" id="searchButton">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                Search Reviews
+            </button>
+        </section>
+
+        <!-- Results Section -->
+        <section class="results-section" id="results">
+            <!-- Results will be populated dynamically -->
+        </section>
+    </div>
+
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-animation">
+            <div class="loading-wheel"></div>
+        </div>
+        <div class="loading-text">Gathering reviews from multiple sources...</div>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="config/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
