@@ -22,15 +22,18 @@ export default function Header() {
     <header className={`header ${isScrolled ? 'scrolled' : ''}`}>
       <div className="header-content">
         <Link href="/" className="logo">
+          {/* Using a simple text logo based on your branding guide */}
           <div className="logo-img">BB</div>
           <span className="logo-text">Brake Bias</span>
         </Link>
         
-        <nav className="nav-links">
+        {/* Navigation links removed */}
+        {/* <nav className="nav-links">
           <Link href="/search">Search</Link>
           <Link href="/compare">Compare</Link>
           <Link href="/about">About</Link>
         </nav>
+        */}
 
         <ThemeSwitcher />
       </div>
@@ -74,7 +77,7 @@ export default function Header() {
           width: 40px;
           height: 40px;
           border-radius: 8px;
-          background: linear-gradient(135deg, #FF3B30 0%, #FF6B6B 100%);
+          background: var(--primary); /* Using Track Red */
           display: flex;
           align-items: center;
           justify-content: center;
@@ -88,27 +91,8 @@ export default function Header() {
           font-weight: 700;
         }
 
-        .nav-links {
-          display: flex;
-          gap: 2rem;
-          align-items: center;
-        }
-
-        .nav-links a {
-          color: var(--text-secondary);
-          text-decoration: none;
-          font-weight: 500;
-          transition: color 0.2s;
-        }
-
-        .nav-links a:hover {
-          color: var(--primary);
-        }
-
         @media (max-width: 768px) {
-          .nav-links {
-            display: none;
-          }
+          /* No nav links to hide */
         }
       `}</style>
     </header>

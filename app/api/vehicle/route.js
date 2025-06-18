@@ -1,120 +1,76 @@
 // app/api/vehicle/route.js
 import { NextResponse } from 'next/server';
-import { fetchProfessionalReviews } from '@/lib/api/reviews';
-import { fetchRedditSentiment } from '@/lib/api/reddit';
-import { fetchVehicleSpecs } from '@/lib/api/specs';
-import { fetchMarketPricing } from '@/lib/api/pricing';
-import { analyzeWithClaude } from '@/lib/api/claude';
-import { analyzeWithOpenAI } from '@/lib/api/openai';
-import { cacheManager } from '@/lib/cache';
+import { getRedditSentiment } from '@/lib/api/reddit';
+import { getProfessionalReviews } from '@/lib/api/reviews';
+import { getPricingData } from '@/lib/api/pricing';
+import { getSpecs } from '@/lib/api/specs';
+import { getSpecsFromWikidata } from '@/lib/api/wikidata'; // <-- Import our new function
+import { setCache, getCache } from '@/lib/cache';
 
 export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const year = searchParams.get('year');
+  const make = searchParams.get('make');
+  const model = searchParams.get('model');
+
+  if (!year || !make || !model) {
+    return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
+  }
+
+  const cacheKey = `vehicle:${year}-${make}-${model}`;
+  const cachedData = await getCache(cacheKey);
+  if (cachedData) {
+    return NextResponse.json(cachedData);
+  }
+
   try {
-    const { searchParams } = new URL(request.url);
-    const year = searchParams.get('year');
-    const make = searchParams.get('make');
-    const model = searchParams.get('model');
-    const submodel = searchParams.get('submodel');
-    const zipcode = searchParams.get('zipcode');
-
-    // Validate required parameters
-    if (!year || !make || !model) {
-      return NextResponse.json(
-        { error: 'Missing required parameters: year, make, model' },
-        { status: 400 }
-      );
-    }
-
-    // Create cache key
-    const cacheKey = `vehicle:${year}:${make}:${model}:${submodel || 'base'}`;
+    // --- TIER 1: WIKIDATA ---
+    // First, try to get specs from Wikidata. It's fast and free.
+    let specs = await getSpecsFromWikidata(make, model, year);
     
-    // Check cache first
-    const cached = await cacheManager.get(cacheKey);
-    if (cached) {
-      console.log('Returning cached data for:', cacheKey);
-      // Add local pricing if zipcode provided
-      if (zipcode && !cached.pricing?.localData) {
-        cached.pricing = await fetchMarketPricing({ year, make, model, zipcode });
-      }
-      return NextResponse.json(cached);
+    // Define the promises for the other API calls
+    const promises = [
+      getPricingData(year, make, model),
+      getProfessionalReviews(year, make, model),
+      getRedditSentiment(year, make, model),
+    ];
+    
+    // --- TIER 2: AI FALLBACK ---
+    // If Wikidata didn't return specs, add the AI-based spec generation to the promises.
+    if (!specs) {
+      console.log("Fallback: Calling AI for specs.");
+      promises.push(getSpecs(year, make, model));
     }
 
-    console.log('Fetching fresh data for:', { year, make, model, submodel });
+    // Await all the promises together for parallel execution
+    const results = await Promise.allSettled(promises);
 
-    // Parallel data fetching for better performance
-    const [
+    // Process the results
+    const pricing = results[0].status === 'fulfilled' ? results[0].value : null;
+    const reviews = results[1].status === 'fulfilled' ? results[1].value : null;
+    const reddit = results[2].status === 'fulfilled' ? results[2].value : null;
+
+    // If we used the AI fallback, specs will be the last result.
+    // Otherwise, we use the specs from Wikidata.
+    if (!specs) {
+       specs = results[3].status === 'fulfilled' ? results[3].value : null;
+    }
+
+    const responseData = {
+      year,
+      make,
+      model,
       specs,
-      professionalReviewsRaw,
-      redditDataRaw,
-      pricing
-    ] = await Promise.all([
-      // Basic vehicle specs (can use NHTSA API)
-      fetchVehicleSpecs({ year, make, model }),
-      
-      // Scrape professional reviews
-      fetchProfessionalReviews({ year, make, model }),
-      
-      // Fetch Reddit discussions
-      fetchRedditSentiment({ year, make, model, limit: 50 }),
-      
-      // Get pricing data
-      fetchMarketPricing({ year, make, model, zipcode })
-    ]);
-
-    // Process reviews with AI in parallel
-    const [professionalAnalysis, redditAnalysis] = await Promise.all([
-      // Use Claude for in-depth professional review analysis
-      analyzeWithClaude({
-        type: 'professional_reviews',
-        reviews: professionalReviewsRaw,
-        vehicleInfo: { year, make, model }
-      }),
-      
-      // Use OpenAI for Reddit sentiment analysis
-      analyzeWithOpenAI({
-        type: 'reddit_sentiment',
-        posts: redditDataRaw,
-        vehicleInfo: { year, make, model }
-      })
-    ]);
-
-    // Combine all data
-    const vehicleData = {
-      vehicleInfo: { year, make, model, submodel },
-      specs,
-      reviews: professionalAnalysis.reviews,
-      professionalSummary: professionalAnalysis.summary,
-      reddit: redditAnalysis,
       pricing,
-      images: await getVehicleImages({ year, make, model }),
-      timestamp: new Date().toISOString()
+      reviews,
+      reddit,
     };
 
-    // Cache the results (except local pricing)
-    const dataToCache = { ...vehicleData };
-    if (dataToCache.pricing?.localData) {
-      delete dataToCache.pricing.localData;
-    }
-    await cacheManager.set(cacheKey, dataToCache, 3600); // 1 hour cache
+    await setCache(cacheKey, responseData);
+    return NextResponse.json(responseData);
 
-    return NextResponse.json(vehicleData);
-    
   } catch (error) {
-    console.error('Vehicle API Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch vehicle data', details: error.message },
-      { status: 500 }
-    );
+    console.error('Error fetching vehicle data:', error);
+    return NextResponse.json({ error: 'Failed to fetch vehicle data' }, { status: 500 });
   }
-}
-
-// Helper function to get vehicle images
-async function getVehicleImages({ year, make, model }) {
-  // In production, this could query an image API or CDN
-  // For now, return placeholder images
-  return [
-    `https://source.unsplash.com/800x600/?${year}+${make}+${model}+car+exterior`,
-    `https://source.unsplash.com/800x600/?${year}+${make}+${model}+car+interior`,
-    `https://source.unsplash.com/800x600/?${year}+${make}+${model}+car+side`
-  ];
 }

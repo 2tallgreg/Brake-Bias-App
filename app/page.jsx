@@ -1,133 +1,162 @@
 // app/page.jsx
 'use client';
 
-import Link from 'next/link';
-import SearchForm from '@/components/search/SearchForm';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { vehicleDatabase } from '@/lib/constants'; // Assuming you have this from previous steps
+import Image from 'next/image';
+
 
 export default function HomePage() {
+  const router = useRouter();
+  const [year, setYear] = useState('');
+  const [make, setMake] = useState('');
+  const [model, setModel] = useState('');
+  const [submodel, setSubmodel] = useState('');
+  const [zipcode, setZipcode] = useState('');
+  
+  const [models, setModels] = useState([]);
+
+  const handleMakeChange = (selectedMake) => {
+    setMake(selectedMake);
+    setModel('');
+    setModels(vehicleDatabase[selectedMake] || []);
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (!year || !make || !model) {
+        alert('Please select a Year, Make, and Model.');
+        return;
+    }
+    const params = new URLSearchParams({
+      year,
+      make,
+      model,
+      ...(submodel && { submodel }),
+      ...(zipcode && { zipcode }),
+    });
+    router.push(`/results?${params}`);
+  };
+
+  // Generate years for dropdown
+  const currentYear = new Date().getFullYear() + 1;
+  const years = Array.from({ length: currentYear - 1980 }, (_, i) => currentYear - i);
+  const makes = Object.keys(vehicleDatabase).sort();
+
   return (
-    <div className="container">
-      <section className="hero">
-        <h1>Brake Bias Car Reviews</h1>
-        <p>The Metacritic of Cars - Aggregated Reviews from Professionals and Owners</p>
-      </section>
-
-      <section className="search-section">
-        <h2>Search for Vehicle Reviews</h2>
-        <SearchForm />
-      </section>
-
-      <section className="features">
-        <h2>Why Brake Bias?</h2>
-        <div className="feature-grid">
-          <div className="feature-card">
-            <div className="feature-icon">📊</div>
-            <h3>Professional Reviews</h3>
-            <p>Aggregated reviews from MotorTrend, Car and Driver, Edmunds, and more</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">💬</div>
-            <h3>Owner Sentiment</h3>
-            <p>Real feedback from Reddit discussions and owner forums</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">💰</div>
-            <h3>Market Pricing</h3>
-            <p>Local and national pricing data to help you get the best deal</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">🔍</div>
-            <h3>AI-Powered Insights</h3>
-            <p>Smart summaries powered by OpenAI and Google Gemini</p>
-          </div>
+    <div className="home-container">
+        <div className="hero-section">
+            <Image src="/logo.jpg" alt="Brake Bias Logo" width={100} height={100} className="logo" />
+            <h1 className="title">Brake Bias</h1>
+            <p className="tagline">Stop Guessing. Start Driving.</p>
         </div>
-      </section>
+
+        <div className="search-container">
+            <form onSubmit={handleSearch} className="search-form">
+                <div className="input-row">
+                    <select value={year} onChange={(e) => setYear(e.target.value)} required className="form-input">
+                        <option value="">Select Year</option>
+                        {years.map(y => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                    <select value={make} onChange={(e) => handleMakeChange(e.target.value)} required className="form-input" disabled={!year}>
+                        <option value="">Select Make</option>
+                        {makes.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                    <select value={model} onChange={(e) => setModel(e.target.value)} required className="form-input" disabled={!make}>
+                        <option value="">Select Model</option>
+                        {models.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                </div>
+                <div className="input-row">
+                    <input type="text" value={submodel} onChange={(e) => setSubmodel(e.target.value)} placeholder="Submodel (e.g., TRD, Sport)" className="form-input" />
+                    <input type="text" value={zipcode} onChange={(e) => setZipcode(e.target.value)} placeholder="ZIP Code (Optional)" className="form-input" />
+                </div>
+                <button type="submit" className="search-button">Analyze</button>
+            </form>
+             <p className="form-footer-text">Don't worry, we'll do the hard work. You just drive.</p>
+        </div>
 
       <style jsx>{`
-        .hero {
-          text-align: center;
-          padding: 4rem 0;
-          margin-bottom: 3rem;
-        }
-
-        .hero h1 {
-          font-size: 3rem;
-          margin-bottom: 1rem;
-          background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-
-        .hero p {
-          font-size: 1.25rem;
-          color: var(--text-secondary);
-          max-width: 600px;
-          margin: 0 auto;
-        }
-
-        .search-section {
-          margin-bottom: 4rem;
-        }
-
-        .search-section h2 {
-          text-align: center;
-          margin-bottom: 2rem;
-        }
-
-        .features {
-          margin-bottom: 4rem;
-        }
-
-        .features h2 {
-          text-align: center;
-          margin-bottom: 3rem;
-        }
-
-        .feature-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 2rem;
-        }
-
-        .feature-card {
-          background: var(--bg-secondary);
+        .home-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 80vh;
           padding: 2rem;
-          border-radius: 16px;
           text-align: center;
-          transition: transform 0.2s ease;
         }
-
-        .feature-card:hover {
-          transform: translateY(-4px);
+        .hero-section {
+            margin-bottom: 2rem;
         }
-
-        .feature-icon {
+        .logo {
+            border-radius: 16px;
+            margin-bottom: 1rem;
+        }
+        .title {
+          font-family: 'Roboto Mono', monospace;
           font-size: 3rem;
-          margin-bottom: 1rem;
-        }
-
-        .feature-card h3 {
+          color: var(--text-primary);
           margin-bottom: 0.5rem;
         }
-
-        .feature-card p {
+        .tagline {
+          font-size: 1.25rem;
           color: var(--text-secondary);
-          margin: 0;
+          margin-bottom: 3rem;
+        }
+        .search-container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--bg-secondary);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+        .search-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .input-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        .search-button {
+          padding: 1rem;
+          width: 100%;
+          background-color: var(--primary);
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-size: 1.125rem;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .search-button:hover {
+          opacity: 0.9;
+        }
+        .form-footer-text {
+            margin-top: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+            font-style: italic;
         }
 
         @media (max-width: 768px) {
-          .hero h1 {
-            font-size: 2rem;
-          }
-
-          .hero p {
-            font-size: 1rem;
-          }
-
-          .feature-grid {
-            grid-template-columns: 1fr;
-          }
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+            .title {
+                font-size: 2.5rem;
+            }
         }
       `}</style>
     </div>
