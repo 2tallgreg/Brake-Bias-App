@@ -1,3 +1,48 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* app/globals.css */
+
+/* CSS Variables for Theming */
+:root {
+  --primary: #D72638; /* Track Red */
+  --secondary: #5856D6;
+  --success: #34C759;
+  --warning: #FFC20E; /* ABS Yellow */
+  --danger: #FF3B30;
+  --neutral: #8E8E93;
+  --bg-primary: #F4F4F4; /* Brake Dust */
+  --bg-secondary: #FFFFFF;
+  --text-primary: #1A1A1A; /* Graphite */
+  --text-secondary: #3C3C43;
+  --text-tertiary: #C7C7CC;
+  --border: #E5E5EA;
+  --shadow: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] {
+  --primary: #D72638; /* Track Red */
+  --bg-primary: #1A1A1A; /* Graphite */
+  --bg-secondary: #2C2C2E;
+  --text-primary: #FFFFFF;
+  --text-secondary: #EBEBF5;
+  --text-tertiary: #48484A;
+  --border: #38383A;
+  --shadow: rgba(0, 0, 0, 0.2);
+}
+
+/* Basic Reset */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3, h4, h5, h6 { font-weight: 700; line-height: 1.2; margin-bottom: 0.75em; }
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+
+p { margin-bottom: 1em; }
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
