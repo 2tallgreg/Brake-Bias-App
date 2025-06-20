@@ -1,52 +1,38 @@
-// components/results/MarketSection.jsx
 import React from 'react';
 
-export default function MarketSection({ market }) {
-  if (!market || !market.depreciation) return null;
+export default function MarketSection({ listingsLink }) {
+  if (!listingsLink) return null;
 
   return (
     <div className="market-section">
-      <h2 className="section-title">Market Analysis</h2>
-      <div className="market-card">
-        <h3 className="market-subtitle">5-Year Depreciation</h3>
-        <p className="market-value">{market.depreciation}%</p>
-        <p className="market-description">
-          This vehicle is projected to depreciate by {market.depreciation}% after five years.
-          Lower percentages are generally better, indicating the car holds its value well.
-        </p>
-      </div>
+      <h2 className="section-title">Find Listings</h2>
+      <a href={listingsLink} target="_blank" rel="noopener noreferrer" className="market-link">
+        Search all major listings on AutoTempest &rarr;
+      </a>
       <style jsx>{`
-        .market-section {
-          margin-bottom: 2rem;
-        }
         .section-title {
-          font-size: 1.75rem;
+          font-size: 1.5rem;
           font-weight: 700;
           margin-bottom: 1rem;
           color: var(--text-primary);
+          border-bottom: 2px solid var(--color-accent);
+          padding-bottom: 0.5rem;
         }
-        .market-card {
-          background-color: var(--bg-secondary);
+        .market-link {
+          display: block;
+          padding: 1rem;
+          background-color: var(--color-accent);
+          color: white;
+          text-align: center;
           border-radius: 12px;
-          border: 1px solid var(--border);
-          padding: 1.5rem;
-        }
-        .market-subtitle {
-          font-size: 1.25rem;
           font-weight: 600;
-          color: var(--text-primary);
-          margin: 0;
+          text-decoration: none;
+          transition: transform 0.2s ease;
         }
-        .market-value {
-          font-size: 2.5rem;
-          font-weight: 800;
-          color: var(--color-accent);
-          margin: 0.5rem 0;
-        }
-        .market-description {
-            font-size: 1rem;
-            color: var(--text-secondary);
-            margin: 0;
+        .market-link:hover {
+          transform: translateY(-2px);
+          opacity: 0.9;
+          text-decoration: none;
         }
       `}</style>
     </div>

@@ -1,12 +1,12 @@
 // components/results/VehicleHeader.jsx
 import React from 'react';
 
-export default function VehicleHeader({ year, make, model, submodel, tldr }) {
-  const fullModelName = `${year} ${make} ${model} ${submodel || ''}`.trim();
-
+// Changed props to accept a single 'yearMakeModel' string
+export default function VehicleHeader({ yearMakeModel, tldr }) {
   return (
     <div className="vehicle-header">
-      <h1 className="vehicle-title">{fullModelName}</h1>
+      {/* Display the single prop directly */}
+      <h1 className="vehicle-title">{yearMakeModel || 'Vehicle Details'}</h1>
       {tldr && <p className="vehicle-tldr">{tldr}</p>}
 
       <style jsx>{`

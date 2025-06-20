@@ -1,9 +1,8 @@
-// app/results/page.jsx
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { fetchBrakeBiasData } from '@/js/api'; // <-- CORRECTED PATH
+import { fetchBrakeBiasData } from '@/js/api';
 
 import VehicleHeader from '@/components/results/VehicleHeader';
 import QuickStats from '@/components/results/QuickStats';
@@ -26,7 +25,7 @@ function ResultsPageContent() {
       make: searchParams.get('make'),
       model: searchParams.get('model'),
       submodel: searchParams.get('submodel'),
-      zipcode: '90210', // Example zipcode
+      zipcode: searchParams.get('zipcode'),
     };
 
     if (vehicle.year && vehicle.make && vehicle.model) {
@@ -45,7 +44,7 @@ function ResultsPageContent() {
           setLoading(false);
         });
     } else {
-        setError("Missing vehicle information in the URL. Please start a new search.");
+        setError("Missing vehicle information. Please start a new search.");
         setLoading(false);
     }
   }, [searchParams]);
@@ -65,27 +64,27 @@ function ResultsPageContent() {
   return (
     <div className="results-page">
       <VehicleHeader
-        year={data.year}
-        make={data.make}
-        model={data.model}
-        submodel={data.submodel}
+        yearMakeModel={data.yearMakeModel}
         tldr={data.tldr}
       />
       <div className="grid-container">
         <div className="main-content">
-          <ProfessionalReviews reviews={data.professional_reviews} />
-          <RedditSentiment sentiment={data.reddit_sentiment} />
+          {/* Add ProfessionalReviews and RedditSentiment components here */}
+          <ProfessionalReviews reviews={data.reviews} />
+          <RedditSentiment sentiment={data.ownerSentiment} />
         </div>
         <aside className="sidebar">
-          <QuickStats stats={data.specs} />
-          <PricingSection pricing={data.pricing} />
-          <MarketSection market={data.market} />
+          {/* Add QuickStats, PricingSection, and MarketSection here */}
+          <QuickStats stats={data} />
+          <PricingSection pricing={data} />
+          <MarketSection listingsLink={data.autoTempestLink} />
         </aside>
       </div>
        <style jsx>{`
         .results-page {
             max-width: 1400px;
-            margin: auto;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
         }
         .grid-container {
             display: grid;
@@ -97,7 +96,7 @@ function ResultsPageContent() {
                 grid-template-columns: 2fr 1fr;
             }
         }
-        .main-content {
+        .main-content, .sidebar {
             display: flex;
             flex-direction: column;
             gap: 2rem;

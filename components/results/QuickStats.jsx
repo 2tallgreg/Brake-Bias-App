@@ -1,4 +1,3 @@
-// components/results/QuickStats.jsx
 import React from 'react';
 import SpecsCard from './SpecsCard';
 
@@ -7,7 +6,6 @@ export default function QuickStats({ stats }) {
 
   const quickStats = [
     { label: 'Engine', value: stats.engine },
-    { label: 'Horsepower', value: stats.horsepower },
     { label: 'Drivetrain', value: stats.drivetrain },
     { label: 'Transmission', value: stats.transmission },
   ];
@@ -17,18 +15,17 @@ export default function QuickStats({ stats }) {
       <h2 className="section-title">Quick Stats</h2>
       <div className="stats-grid">
         {quickStats.map((stat, index) => (
-          stat.value ? <SpecsCard key={index} label={stat.label} value={stat.value} /> : null
+          (stat.value && stat.value !== "Data Not Available") ? <SpecsCard key={index} label={stat.label} value={stat.value} /> : null
         ))}
       </div>
       <style jsx>{`
-        .quick-stats-container {
-          margin-bottom: 2rem;
-        }
         .section-title {
-          font-size: 1.75rem;
+          font-size: 1.5rem;
           font-weight: 700;
           margin-bottom: 1rem;
           color: var(--text-primary);
+          border-bottom: 2px solid var(--color-accent);
+          padding-bottom: 0.5rem;
         }
         .stats-grid {
           display: grid;

@@ -1,75 +1,78 @@
-// components/results/RedditSentiment.jsx
 import React from 'react';
 
 export default function RedditSentiment({ sentiment }) {
-    if (!sentiment) return null;
-    
-    const total = sentiment.positive + sentiment.negative + sentiment.neutral;
-    const positivePercent = (sentiment.positive / total) * 100;
-    const negativePercent = (sentiment.negative / total) * 100;
-    const neutralPercent = (sentiment.neutral / total) * 100;
+  if (!sentiment) {
+     return <div><h2 className="section-title">Owner Sentiment</h2><p>No owner sentiment data available.</p></div>;
+  }
 
   return (
     <div className="sentiment-section">
-      <h2 className="section-title">Reddit Sentiment</h2>
-      <div className="sentiment-summary">
-          <p>Based on <strong>{total}</strong> comments</p>
-      </div>
-      <div className="sentiment-bar">
-        <div className="sentiment-positive" style={{ width: `${positivePercent}%` }}></div>
-        <div className="sentiment-neutral" style={{ width: `${neutralPercent}%` }}></div>
-        <div className="sentiment-negative" style={{ width: `${negativePercent}%` }}></div>
-      </div>
-      <div className="sentiment-legend">
-          <div className="legend-item"><span className="dot positive"></span> Positive ({Math.round(positivePercent)}%)</div>
-          <div className="legend-item"><span className="dot neutral"></span> Neutral ({Math.round(neutralPercent)}%)</div>
-          <div className="legend-item"><span className="dot negative"></span> Negative ({Math.round(negativePercent)}%)</div>
+      <h2 className="section-title">Owner Sentiment (from Reddit)</h2>
+      <div className="sentiment-card">
+        <p className="sentiment-summary">"{sentiment.text}"</p>
+        <div className="keywords">
+            {sentiment.keywords?.positive?.length > 0 && 
+              <div className="keyword-group">
+                <h4>Common Praise</h4>
+                <div className="tags">{sentiment.keywords.positive.map(k => <span key={k} className="tag positive">{k}</span>)}</div>
+              </div>
+            }
+            {sentiment.keywords?.negative?.length > 0 && 
+              <div className="keyword-group">
+                <h4>Common Complaints</h4>
+                <div className="tags">{sentiment.keywords.negative.map(k => <span key={k} className="tag negative">{k}</span>)}</div>
+              </div>
+            }
+        </div>
       </div>
       <style jsx>{`
-        .sentiment-section {
-          margin-bottom: 2rem;
-        }
         .section-title {
           font-size: 1.75rem;
           font-weight: 700;
           margin-bottom: 1rem;
           color: var(--text-primary);
+          border-bottom: 2px solid var(--color-accent);
+          padding-bottom: 0.5rem;
+        }
+        .sentiment-card {
+          background-color: var(--bg-secondary);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 1.5rem;
         }
         .sentiment-summary {
-            color: var(--text-secondary);
-            margin-bottom: 1rem;
+          font-style: italic;
+          margin-bottom: 1.5rem;
         }
-        .sentiment-bar {
+        .keywords {
           display: flex;
-          height: 20px;
-          border-radius: 10px;
-          overflow: hidden;
-          background-color: var(--border);
+          flex-direction: column;
+          gap: 1rem;
         }
-        .sentiment-positive { background-color: #28a745; }
-        .sentiment-neutral { background-color: #ffc107; }
-        .sentiment-negative { background-color: #dc3545; }
-        .sentiment-legend {
-            display: flex;
-            justify-content: center;
-            gap: 1.5rem;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
+        .keyword-group h4 {
+          font-size: 1rem;
+          font-weight: bold;
+          margin-bottom: 0.5rem;
         }
-        .legend-item {
-            display: flex;
-            align-items: center;
+        .tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
         }
-        .dot {
-            height: 12px;
-            width: 12px;
-            border-radius: 50%;
-            margin-right: 0.5rem;
+        .tag {
+          padding: 0.25rem 0.75rem;
+          border-radius: 1rem;
+          font-size: 0.875rem;
+          font-weight: 500;
         }
-        .dot.positive { background-color: #28a745; }
-        .dot.neutral { background-color: #ffc107; }
-        .dot.negative { background-color: #dc3545; }
+        .tag.positive {
+          background-color: #28a74520;
+          color: #28a745;
+        }
+        .tag.negative {
+          background-color: #dc354520;
+          color: #dc3545;
+        }
       `}</style>
     </div>
   );
