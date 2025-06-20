@@ -1,4 +1,6 @@
 // app/not-found.jsx
+'use client';
+
 import Link from 'next/link';
 
 export default function NotFound() {
@@ -7,51 +9,47 @@ export default function NotFound() {
       <h1 className="error-code">404</h1>
       <h2 className="error-message">Page Not Found</h2>
       <p className="error-description">
-        Sorry, the page you are looking for does not exist. It might have been moved or deleted.
+        Sorry, the page you are looking for does not exist.
       </p>
       <Link href="/" className="home-link">
-        Go Back to Homepage
+        Return to Homepage
       </Link>
-      
       <style jsx>{`
         .not-found-container {
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
+          height: 80vh;
           text-align: center;
-          min-height: 80vh;
-          padding: 2rem;
+          color: var(--text-primary);
         }
         .error-code {
           font-size: 6rem;
-          font-weight: 900;
-          color: var(--primary);
-          line-height: 1;
+          font-weight: 800;
+          color: var(--color-accent);
+          margin: 0;
         }
         .error-message {
-          font-size: 1.75rem;
-          margin-top: 0.5rem;
-          color: var(--text-secondary);
+          font-size: 2rem;
+          margin: 0 0 1rem;
         }
         .error-description {
-          margin-top: 1rem;
-          max-width: 400px;
-          color: var(--text-tertiary);
+          font-size: 1.125rem;
+          color: var(--text-secondary);
+          margin-bottom: 2rem;
         }
         .home-link {
-          margin-top: 2rem;
           padding: 0.75rem 1.5rem;
-          background-color: var(--primary);
-          color: white;
+          background-color: var(--color-accent);
+          color: var(--bg-primary);
           border-radius: 8px;
+          text-decoration: none;
           font-weight: 600;
-          transition: transform 0.2s ease, opacity 0.2s ease;
+          transition: background-color 0.2s;
         }
         .home-link:hover {
-          transform: translateY(-2px);
-          opacity: 0.9;
-          text-decoration: none;
+          background-color: var(--color-accent-hover);
         }
       `}</style>
     </div>

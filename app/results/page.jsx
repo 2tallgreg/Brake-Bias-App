@@ -1,8 +1,9 @@
+// app/results/page.jsx
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { fetchBrakeBiasData } from '@/lib/api/brake-bias';
+import { fetchBrakeBiasData } from '@/js/api'; // <-- CORRECTED PATH
 
 import VehicleHeader from '@/components/results/VehicleHeader';
 import QuickStats from '@/components/results/QuickStats';
@@ -10,95 +11,106 @@ import PricingSection from '@/components/results/PricingSection';
 import ProfessionalReviews from '@/components/results/ProfessionalReviews';
 import RedditSentiment from '@/components/results/RedditSentiment';
 import MarketSection from '@/components/results/MarketSection';
-import ErrorMessage from '@/components/common/ErrorMessage';
 import LoadingScreen from '@/components/common/LoadingScreen';
+import ErrorMessage from '@/components/common/ErrorMessage';
 
-function Results() {
-    const searchParams = useSearchParams();
-    const [data, setData] = useState(null);
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(true);
+function ResultsPageContent() {
+  const searchParams = useSearchParams();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const vehicle = {
-            year: searchParams.get('year'),
-            make: searchParams.get('make'),
-            model: searchParams.get('model'),
-            submodel: searchParams.get('submodel'),
-            zipcode: searchParams.get('zipcode')
-        };
+  useEffect(() => {
+    const vehicle = {
+      year: searchParams.get('year'),
+      make: searchParams.get('make'),
+      model: searchParams.get('model'),
+      submodel: searchParams.get('submodel'),
+      zipcode: '90210', // Example zipcode
+    };
 
-        if (vehicle.year && vehicle.make && vehicle.model) {
-            setLoading(true);
-            setError(null);
-            fetchBrakeBiasData(vehicle)
-                .then(setData)
-                .catch(setError)
-                .finally(() => setLoading(false));
-        } else {
-            setError('Missing required vehicle information (Year, Make, Model).');
-            setLoading(false);
-        }
-    }, [searchParams]);
+    if (vehicle.year && vehicle.make && vehicle.model) {
+      setLoading(true);
+      fetchBrakeBiasData(vehicle)
+        .then(response => {
+          setData(response);
+          setError(null);
+        })
+        .catch(err => {
+          console.error("Error in fetchBrakeBiasData:", err);
+          setError(err.message || 'An unknown error occurred.');
+          setData(null);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+        setError("Missing vehicle information in the URL. Please start a new search.");
+        setLoading(false);
+    }
+  }, [searchParams]);
 
-    if (loading) return <LoadingScreen />;
-    if (error) return <ErrorMessage message={error} />;
-    if (!data) return <ErrorMessage message="No data found for the specified vehicle." />;
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
-    return (
-        <div className="results-container">
-            <VehicleHeader
-                year={data.year}
-                make={data.make}
-                model={data.model}
-                submodel={data.submodel}
-                tldr={data.tldr}
-            />
-            <div className="main-content-grid">
-                <div className="left-column">
-                    <SpecsCard title="Quick Stats" data={data.quickStats} />
-                    <RedditSentiment data={data.ownerSentiment} />
-                </div>
-                <div className="right-column">
-                    <PricingSection msrp={data.pricing.msrp} usedAvg={data.pricing.usedAvg} />
-                    <ProfessionalReviews reviews={data.reviews} />
-                    <MarketSection listings={data.market.listings} history={data.market.history} />
-                </div>
-            </div>
-            
-            <style jsx>{`
-                .results-container {
-                    max-width: 1200px;
-                    margin: 2rem auto;
-                    padding: 0 1rem;
-                }
-                .main-content-grid {
-                    display: grid;
-                    grid-template-columns: 1fr 2fr;
-                    gap: 2rem;
-                    margin-top: 2rem;
-                }
-                .left-column, .right-column {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 2rem;
-                }
+  if (error) {
+    return <ErrorMessage message={error} />;
+  }
 
-                @media (max-width: 900px) {
-                    .main-content-grid {
-                        grid-template-columns: 1fr;
-                    }
-                }
-            `}</style>
+  if (!data) {
+    return <ErrorMessage message="No data was returned for this vehicle." />;
+  }
+
+  return (
+    <div className="results-page">
+      <VehicleHeader
+        year={data.year}
+        make={data.make}
+        model={data.model}
+        submodel={data.submodel}
+        tldr={data.tldr}
+      />
+      <div className="grid-container">
+        <div className="main-content">
+          <ProfessionalReviews reviews={data.professional_reviews} />
+          <RedditSentiment sentiment={data.reddit_sentiment} />
         </div>
-    );
+        <aside className="sidebar">
+          <QuickStats stats={data.specs} />
+          <PricingSection pricing={data.pricing} />
+          <MarketSection market={data.market} />
+        </aside>
+      </div>
+       <style jsx>{`
+        .results-page {
+            max-width: 1400px;
+            margin: auto;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        @media (min-width: 1024px) {
+            .grid-container {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+      `}</style>
+    </div>
+  );
 }
 
-// Wrap the component in a Suspense boundary because useSearchParams() requires it.
 export default function ResultsPage() {
     return (
         <Suspense fallback={<LoadingScreen />}>
-            <Results />
+            <ResultsPageContent />
         </Suspense>
-    );
+    )
 }
