@@ -1,14 +1,18 @@
+// components/results/QuickStats.jsx
 import React from 'react';
 import SpecsCard from './SpecsCard';
 
-export default function QuickStats({ stats }) {
-  if (!stats) return null;
-
+// Updated to receive specific props instead of a single 'stats' object
+export default function QuickStats({ engine, drivetrain, transmission }) {
   const quickStats = [
-    { label: 'Engine', value: stats.engine },
-    { label: 'Drivetrain', value: stats.drivetrain },
-    { label: 'Transmission', value: stats.transmission },
+    { label: 'Engine', value: engine },
+    { label: 'Drivetrain', value: drivetrain },
+    { label: 'Transmission', value: transmission },
   ];
+
+  // A check to make sure we don't render an empty section
+  const hasStats = quickStats.some(stat => stat.value && stat.value !== "Data Not Available");
+  if (!hasStats) return null;
 
   return (
     <div className="quick-stats-container">

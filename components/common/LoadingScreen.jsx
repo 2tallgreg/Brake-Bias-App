@@ -1,11 +1,26 @@
 // components/common/LoadingScreen.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { funFacts } from '@/lib/constants';
 
 export default function LoadingScreen() {
+  const [fact, setFact] = useState('');
+
+  useEffect(() => {
+    // Select a random fact when the component loads
+    const randomIndex = Math.floor(Math.random() * funFacts.length);
+    setFact(funFacts[randomIndex]);
+  }, []);
+
   return (
     <div className="loading-container">
       <div className="spinner"></div>
       <p className="loading-text">Analyzing Data...</p>
+      {fact && (
+        <div className="fun-fact-container">
+          <p className="fun-fact-title">Did you know?</p>
+          <p className="fun-fact-text">{fact}</p>
+        </div>
+      )}
 
       <style jsx>{`
         .loading-container {
@@ -14,6 +29,7 @@ export default function LoadingScreen() {
           align-items: center;
           justify-content: center;
           min-height: 80vh;
+          padding: 1rem;
         }
         .spinner {
           width: 50px;
@@ -27,6 +43,23 @@ export default function LoadingScreen() {
         .loading-text {
           font-weight: 500;
           color: var(--text-secondary);
+          font-size: 1.25rem;
+        }
+        .fun-fact-container {
+          margin-top: 2rem;
+          padding: 1rem;
+          max-width: 500px;
+          text-align: center;
+          border-top: 1px solid var(--border);
+        }
+        .fun-fact-title {
+          font-weight: 600;
+          color: var(--text-secondary);
+          margin-bottom: 0.5rem;
+        }
+        .fun-fact-text {
+          font-style: italic;
+          color: var(--text-tertiary);
         }
         @keyframes spin {
           0% { transform: rotate(0deg); }

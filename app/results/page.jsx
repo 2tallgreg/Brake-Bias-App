@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { fetchBrakeBiasData } from '@/js/api';
 
 import VehicleHeader from '@/components/results/VehicleHeader';
 import QuickStats from '@/components/results/QuickStats';
@@ -12,6 +11,22 @@ import RedditSentiment from '@/components/results/RedditSentiment';
 import MarketSection from '@/components/results/MarketSection';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import ErrorMessage from '@/components/common/ErrorMessage';
+import ImageAndSummary from '@/components/results/ImageAndSummary';
+
+// This function should ideally be in `js/api.js` but is included here for clarity
+const fetchBrakeBiasData = async (vehicle) => {
+    // This will call your active API endpoint (currently set to OpenAI)
+    const response = await fetch('/api/brake-bias-openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(vehicle),
+    });
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch data');
+    }
+    return response.json();
+};
 
 function ResultsPageContent() {
   const searchParams = useSearchParams();
@@ -61,6 +76,7 @@ function ResultsPageContent() {
     return <ErrorMessage message="No data was returned for this vehicle." />;
   }
 
+  // The return statement belongs inside the function like this
   return (
     <div className="results-page">
       <VehicleHeader
@@ -69,14 +85,23 @@ function ResultsPageContent() {
       />
       <div className="grid-container">
         <div className="main-content">
-          {/* Add ProfessionalReviews and RedditSentiment components here */}
+          <ImageAndSummary 
+            imageUrl={data.wikimediaImageUrl}
+            summary={data.wikimediaSummary}
+          />
           <ProfessionalReviews reviews={data.reviews} />
           <RedditSentiment sentiment={data.ownerSentiment} />
         </div>
         <aside className="sidebar">
-          {/* Add QuickStats, PricingSection, and MarketSection here */}
-          <QuickStats stats={data} />
-          <PricingSection pricing={data} />
+          <QuickStats
+            engine={data.engine}
+            drivetrain={data.drivetrain}
+            transmission={data.transmission}
+          />
+          <PricingSection 
+            msrp={data.msrp}
+            usedAvg={data.usedAvg}
+          />
           <MarketSection listingsLink={data.autoTempestLink} />
         </aside>
       </div>

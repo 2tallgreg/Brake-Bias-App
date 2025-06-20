@@ -2,9 +2,7 @@
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // The images property is correct, just update the syntax inside
   images: {
-    // This is the new, recommended format
     remotePatterns: [
       {
         protocol: 'https',
@@ -17,6 +15,11 @@ const nextConfig = {
        {
         protocol: 'https',
         hostname: 'bringatrailer.com',
+      },
+      // Add this new pattern for Wikimedia images
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
       },
     ],
   },
