@@ -1,22 +1,64 @@
 // app/api/brake-bias-openai/route.js
 import { NextResponse } from 'next/server';
 import { generateOpenAIContent } from '@/lib/api/openai';
-import { fetchWikimediaData } from '@/lib/api/wikimedia'; // Import the new helper
+import { fetchWikimediaData } from '@/lib/api/wikimedia';
+import { getCache, setCache } from '@/lib/cache';
 
 export async function POST(request) {
   const { year, make, model, submodel, zipcode } = await request.json();
   const fullVehicleName = submodel ? `${year} ${make} ${model} ${submodel}` : `${year} ${make} ${model}`;
-
-  // ... (rest of the initial setup)
+  
+  // Check for complete cached response first
+  const fullCacheKey = `complete-${fullVehicleName.replace(/\s/g, '-')}`;
+  const cachedResponse = getCache(fullCacheKey);
+  if (cachedResponse) {
+    console.log(`[Cache] HIT for complete response: ${fullCacheKey}`);
+    return NextResponse.json(cachedResponse);
+  }
 
   try {
     // Fetch Wikimedia data in parallel with the AI call
     const wikimediaPromise = fetchWikimediaData(fullVehicleName);
     
-    // ... (construct the prompt for the AI as before)
-    const prompt = `...`; // your existing prompt
-    const cacheKey = `openai-${fullVehicleName.replace(/\s/g, '-')}`;
+    // Prepare context for the AI
+    const priceInstruction = zipcode 
+      ? `Find the average used price for this model in the market around zip code ${zipcode}.`
+      : `Find the national average used price for this model.`;
+      
+    const prompt = `
+      You are "Brake Bias", an expert automotive research assistant. Generate a complete and factually accurate JSON object for the **${fullVehicleName}**.
 
+      **CRITICAL DIRECTIVES:**
+      1.  **ACCURACY IS PARAMOUNT:** Your highest priority is factual accuracy. Use real data when available.
+      2.  **INDEPENDENT RESEARCH:** Treat each key in the JSON object as a separate, mandatory research task.
+      3.  **HANDLE MISSING DATA:** Only after an exhaustive search fails, return "Data Not Available" for text fields, or an empty array \`[]\` for array fields.
+
+      **Required JSON Response Format:**
+      {
+        "yearMakeModel": "${fullVehicleName}",
+        "tldr": "string (brief summary of the vehicle)",
+        "msrp": "string (Original MSRP when new)",
+        "usedAvg": "string (${priceInstruction})",
+        "drivetrain": "string (AWD/FWD/RWD)",
+        "engine": "string (Include displacement, cylinders, HP and Torque)",
+        "transmission": "string",
+        "reviews": [{"source": "string", "sentiment": "string", "text": "string", "link": "string", "review_year": number, "disclaimer": "string | null"}],
+        "ownerSentiment": {
+          "source": "Reddit", 
+          "sentiment": "string (positive/negative/mixed)", 
+          "text": "string (General owner consensus)",
+          "discussion_links": [],
+          "keywords": { "positive": ["string"], "negative": ["string"] }
+        },
+        "summary": "string (comprehensive summary)",
+        "photos": ["string (List 5 common color names for this vehicle)"],
+        "autoTempestLink": "https://www.autotempest.com/results?make=${make}&model=${model.replace(/\s+/g, '%20')}&minyear=${year}&maxyear=${year}${zipcode ? `&zip=${zipcode}&radius=200` : ''}"
+      }
+
+      Return ONLY the JSON object, no additional text.
+    `;
+
+    const cacheKey = `openai-${fullVehicleName.replace(/\s/g, '-')}`;
     const aiPromise = generateOpenAIContent(prompt, cacheKey);
 
     // Wait for both promises to resolve
@@ -28,6 +70,9 @@ export async function POST(request) {
       wikimediaImageUrl: wikimediaData.imageUrl,
       wikimediaSummary: wikimediaData.summary,
     };
+    
+    // Cache the complete response
+    setCache(fullCacheKey, finalData);
 
     return NextResponse.json(finalData);
   } catch (error) {
