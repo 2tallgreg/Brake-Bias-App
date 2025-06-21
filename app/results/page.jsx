@@ -1,3 +1,4 @@
+// app/results/page.jsx
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
@@ -13,9 +14,9 @@ import LoadingScreen from '@/components/common/LoadingScreen';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import ImageAndSummary from '@/components/results/ImageAndSummary';
 
-// This function now calls the primary Gemini endpoint
+// This function calls the Gemini endpoint
 const fetchBrakeBiasData = async (vehicle) => {
-    // This will call your active API endpoint (now set to Gemini)
+    // Call the Gemini endpoint directly
     const response = await fetch('/api/brake-bias', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

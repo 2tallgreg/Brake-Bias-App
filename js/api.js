@@ -7,8 +7,8 @@
  */
 export async function fetchBrakeBiasData(vehicle) {
   try {
-    // Changed the URL to point to the new OpenAI endpoint
-    const response = await fetch('/api/brake-bias-openai', {
+    // Using the Gemini endpoint as primary
+    const response = await fetch('/api/brake-bias', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

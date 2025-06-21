@@ -5,7 +5,7 @@ import { generateOpenAIContent } from '@/lib/api/openai';
 
 // Helper function for Reddit search (simplified for now)
 async function searchReddit(vehicleName) {
-  // Mock data
+  // Mock data - in a real app, this would use Reddit API
   return {
     threads: [
       { 
@@ -29,7 +29,7 @@ export async function POST(request) {
   try {
     // --- PRIMARY ATTEMPT: GEMINI ---
     try {
-      const modelName = 'gemini-2.5-flash';
+      const modelName = 'gemini-2.0-flash';
       console.log(`Attempting to use primary model: ${modelName}`);
 
       const redditData = await searchReddit(fullVehicleName);
@@ -37,7 +37,9 @@ export async function POST(request) {
         ? redditData.threads.map(t => `Title: ${t.title}\nContent: ${t.text}`).join('\n\n---\n\n')
         : "No relevant Reddit discussions were found.";
       
-      const priceInstruction = zipcode ? `Find the average used price for this model in the market around zip code ${zipcode}.` : `Find the national average used price for this model.`;
+      const priceInstruction = zipcode 
+        ? `Find the average used price for this model in the market around zip code ${zipcode}.` 
+        : `Find the national average used price for this model.`;
       
       const autoTempestParams = { make, model, minyear: year, maxyear: year };
       if (submodel) autoTempestParams.trim_kw = submodel;
@@ -55,6 +57,9 @@ export async function POST(request) {
         2.  **INDEPENDENT RESEARCH:** Treat each key in the JSON object as a separate, mandatory research task.
         3.  **HANDLE MISSING DATA:** Only after an exhaustive search fails, return "Data Not Available" for text fields, or an empty array \`[]\` for array fields.
         4.  **Use the provided Reddit context ONLY for the 'ownerSentiment' section.**
+
+        **Reddit Context:**
+        ${redditContext}
 
         **Required JSON Response Format:**
         {
@@ -87,7 +92,9 @@ export async function POST(request) {
       const text = result.response.text();
       
       const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) { throw new Error("No valid JSON object found in Gemini response."); }
+      if (!jsonMatch) { 
+        throw new Error("No valid JSON object found in Gemini response."); 
+      }
       
       const jsonData = JSON.parse(jsonMatch[0]);
       jsonData._metadata = { modelUsed: modelName, timestamp: new Date().toISOString() };
@@ -99,7 +106,9 @@ export async function POST(request) {
 
       // --- FALLBACK ATTEMPT: OPENAI ---
       const openAiCacheKey = `openai-${fullVehicleName.replace(/\s/g, '-')}`;
-      const priceInstruction = zipcode ? `Find the average used price for this model in the market around zip code ${zipcode}.` : `Find the national average used price for this model.`;
+      const priceInstruction = zipcode 
+        ? `Find the average used price for this model in the market around zip code ${zipcode}.` 
+        : `Find the national average used price for this model.`;
       
       const autoTempestParams = { make, model, minyear: year, maxyear: year };
       if (submodel) autoTempestParams.trim_kw = submodel;
@@ -113,7 +122,18 @@ export async function POST(request) {
         You are "Brake Bias", an expert automotive research assistant. Generate a complete and factually accurate JSON object for the **${fullVehicleName}**.
         **Required JSON Response Format:**
         {
-          "yearMakeModel": "${fullVehicleName}", "tldr": "string (brief summary)", "msrp": "string (Original MSRP)", "usedAvg": "string (A price range. ${priceInstruction})", "drivetrain": "string", "engine": "string", "transmission": "string", "reviews": [{"source": "string", "sentiment": "string", "text": "string", "link": "string", "review_year": number, "disclaimer": "string | null", "keywords": { "positive": ["string"], "negative": ["string"] }}], "ownerSentiment": {"source": "Reddit", "sentiment": "string", "text": "string", "discussion_links": [], "keywords": {"positive": [], "negative": []}}, "summary": "string", "photos": [], "autoTempestLink": "${autoTempestLink}"
+          "yearMakeModel": "${fullVehicleName}", 
+          "tldr": "string (brief summary)", 
+          "msrp": "string (Original MSRP)", 
+          "usedAvg": "string (A price range. ${priceInstruction})", 
+          "drivetrain": "string", 
+          "engine": "string", 
+          "transmission": "string", 
+          "reviews": [{"source": "string", "sentiment": "string", "text": "string", "link": "string", "review_year": number, "disclaimer": "string | null", "keywords": { "positive": ["string"], "negative": ["string"] }}], 
+          "ownerSentiment": {"source": "Reddit", "sentiment": "string", "text": "string", "discussion_links": [], "keywords": {"positive": [], "negative": []}}, 
+          "summary": "string", 
+          "photos": [], 
+          "autoTempestLink": "${autoTempestLink}"
         }
       `;
 
