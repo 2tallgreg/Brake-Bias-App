@@ -6,9 +6,20 @@ export default function LoadingScreen() {
   const [fact, setFact] = useState('');
 
   useEffect(() => {
-    // Select a random fact when the component loads
-    const randomIndex = Math.floor(Math.random() * funFacts.length);
-    setFact(funFacts[randomIndex]);
+    // Function to set a new random fact
+    const updateFact = () => {
+      const randomIndex = Math.floor(Math.random() * funFacts.length);
+      setFact(funFacts[randomIndex]);
+    };
+
+    // Set the initial fact immediately
+    updateFact();
+
+    // Set up an interval to change the fact every 5 seconds
+    const intervalId = setInterval(updateFact, 5000);
+
+    // Cleanup function to clear the interval when the component unmounts
+    return () => clearInterval(intervalId);
   }, []);
 
   return (

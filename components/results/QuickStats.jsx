@@ -28,7 +28,7 @@ export default function QuickStats({ engine, drivetrain, transmission }) {
           font-weight: 700;
           margin-bottom: 1rem;
           color: var(--text-primary);
-          border-bottom: 2px solid var(--color-accent);
+          border-bottom: 2px solid var(--primary);
           padding-bottom: 0.5rem;
         }
         .stats-grid {

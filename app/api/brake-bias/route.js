@@ -40,7 +40,6 @@ export async function POST(request) {
       
     // 3. Construct the main prompt for Gemini
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const modelAI = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
       You are "Brake Bias", an expert automotive research assistant. Generate a complete and factually accurate JSON object for the **${fullVehicleName}**.
@@ -79,17 +78,54 @@ export async function POST(request) {
       Return ONLY the JSON object, no additional text.
     `;
 
-    // 4. Generate content and return response
-    const result = await modelAI.generateContent(prompt);
-    const text = result.response.text();
+    // 4. Try Gemini 2.5 Pro first, fallback to 2.0 Flash if needed
+    let modelName = "gemini-2.5-pro-preview-03-25";
+    let result;
+    let text;
     
-    // Extract JSON from the response
+    try {
+      console.log(`Attempting to use model: ${modelName}`);
+      const modelAI = genAI.getGenerativeModel({ model: modelName });
+      result = await modelAI.generateContent(prompt);
+      text = result.response.text();
+      console.log(`Successfully used model: ${modelName}`);
+    } catch (error) {
+      console.log(`Error with ${modelName}:`, error.message);
+      
+      // Check if it's a rate limit or quota error
+      if (error.message.includes('rate limit') || 
+          error.message.includes('quota') || 
+          error.message.includes('RATE_LIMIT_EXCEEDED') ||
+          error.message.includes('RESOURCE_EXHAUSTED')) {
+        
+        console.log('Rate limit detected, falling back to Gemini 2.0 Flash');
+        
+        // Fallback to Gemini 2.0 Flash
+        modelName = "gemini-2.0-flash";
+        const fallbackModel = genAI.getGenerativeModel({ model: modelName });
+        result = await fallbackModel.generateContent(prompt);
+        text = result.response.text();
+        console.log(`Successfully used fallback model: ${modelName}`);
+      } else {
+        // If it's not a rate limit error, throw the original error
+        throw error;
+      }
+    }
+    
+    // 5. Extract JSON from the response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) { 
       throw new Error("No valid JSON object found in the AI response."); 
     }
     
     const jsonData = JSON.parse(jsonMatch[0]);
+    
+    // Add metadata about which model was used
+    jsonData._metadata = {
+      modelUsed: modelName,
+      timestamp: new Date().toISOString()
+    };
+    
     return NextResponse.json(jsonData);
 
   } catch (error) {

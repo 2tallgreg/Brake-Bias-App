@@ -13,6 +13,7 @@ export default function HomePage() {
   const [model, setModel] = useState('');
   const [submodel, setSubmodel] = useState('');
   const [zipcode, setZipcode] = useState('');
+  const [isLocating, setIsLocating] = useState(false);
   
   const [models, setModels] = useState([]);
 
@@ -21,6 +22,37 @@ export default function HomePage() {
     setModel('');
     // In a real app, you might filter models by year/make here
     setModels(vehicleDatabase[selectedMake] || []);
+  };
+
+  const handleGeolocate = async () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    setIsLocating(true);
+    try {
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+      });
+      const { latitude, longitude } = position.coords;
+      
+      // Using a free, privacy-friendly reverse geocoding API
+      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+      if (!response.ok) throw new Error('Failed to fetch address from coordinates.');
+
+      const data = await response.json();
+      if (data.address && data.address.postcode) {
+        setZipcode(data.address.postcode);
+      } else {
+        alert('Could not automatically determine ZIP code from your location.');
+      }
+    } catch (error) {
+      console.error('Geolocation error:', error);
+      alert('Could not get your location. Please ensure location services are enabled and try again.');
+    } finally {
+      setIsLocating(false);
+    }
   };
 
   const handleSearch = (e) => {
@@ -67,7 +99,12 @@ export default function HomePage() {
                 </div>
                 <div className="input-row">
                     <input type="text" value={submodel} onChange={(e) => setSubmodel(e.target.value)} placeholder="Submodel (e.g., TRD, Sport)" className="form-input" />
-                    <input type="text" value={zipcode} onChange={(e) => setZipcode(e.target.value)} placeholder="ZIP Code (Optional)" className="form-input" />
+                    <div className="zipcode-wrapper">
+                        <input type="text" value={zipcode} onChange={(e) => setZipcode(e.target.value)} placeholder="ZIP Code (Optional)" className="form-input" />
+                        <button type="button" onClick={handleGeolocate} disabled={isLocating} className="geolocate-button" title="Use my current location">
+                            {isLocating ? '...' : '📍'}
+                        </button>
+                    </div>
                 </div>
                 <button type="submit" className="search-button">Analyze</button>
             </form>
@@ -138,6 +175,37 @@ export default function HomePage() {
         .form-input:disabled {
             background-color: var(--border);
             cursor: not-allowed;
+        }
+        .zipcode-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .zipcode-wrapper .form-input {
+            padding-right: 3rem; /* Make space for the button */
+        }
+        .geolocate-button {
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+            width: 3rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: transform 0.2s ease;
+        }
+        .geolocate-button:hover {
+            transform: scale(1.1);
+        }
+        .geolocate-button:disabled {
+            cursor: not-allowed;
+            transform: none;
         }
         .search-button {
           padding: 1rem;
