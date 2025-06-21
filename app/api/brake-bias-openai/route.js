@@ -25,6 +25,22 @@ export async function POST(request) {
       ? `Find the average used price for this model in the market around zip code ${zipcode}.`
       : `Find the national average used price for this model.`;
       
+    // Construct the AutoTempest link with the new submodel logic
+    const autoTempestParams = {
+        make,
+        model,
+        minyear: year,
+        maxyear: year
+    };
+    if (submodel) {
+        autoTempestParams.trim_kw = submodel;
+    }
+    if (zipcode) {
+        autoTempestParams.zip = zipcode;
+        autoTempestParams.radius = 200;
+    }
+    const autoTempestLink = `https://www.autotempest.com/results?${new URLSearchParams(autoTempestParams).toString()}`;
+      
     const prompt = `
       You are "Brake Bias", an expert automotive research assistant. Generate a complete and factually accurate JSON object for the **${fullVehicleName}**.
 
@@ -52,7 +68,7 @@ export async function POST(request) {
         },
         "summary": "string (comprehensive summary)",
         "photos": ["string (List 5 common color names for this vehicle)"],
-        "autoTempestLink": "https://www.autotempest.com/results?make=${make}&model=${model.replace(/\s+/g, '%20')}&minyear=${year}&maxyear=${year}${zipcode ? `&zip=${zipcode}&radius=200` : ''}"
+        "autoTempestLink": "${autoTempestLink}"
       }
 
       Return ONLY the JSON object, no additional text.

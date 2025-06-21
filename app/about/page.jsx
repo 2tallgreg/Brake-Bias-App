@@ -1,4 +1,6 @@
 // app/about/page.jsx
+'use client'; // <-- Add this line at the very top
+
 import React from 'react';
 import Link from 'next/link';
 

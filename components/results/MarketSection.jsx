@@ -1,4 +1,3 @@
-
 //components/results/MarketSection.jsx
 import React from 'react';
 
@@ -9,9 +8,9 @@ export default function MarketSection({ listingsLink }) {
     <div className="market-section">
       <h2 className="section-title">Find Listings</h2>
       <div className="listings-card">
-        <p className="listings-label">Search Listings</p>
+        <p className="listings-label">Search across major listing sites with one click.</p>
         <a href={listingsLink} target="_blank" rel="noopener noreferrer" className="listings-link">
-          AutoTempest →
+          Search on AutoTempest &rarr;
         </a>
       </div>
       <style jsx>{`
@@ -36,7 +35,7 @@ export default function MarketSection({ listingsLink }) {
           margin-bottom: 0.5rem;
         }
         .listings-link {
-          font-size: 1.75rem;
+          font-size: 1.25rem;
           font-weight: 700;
           color: var(--primary);
           text-decoration: none;
@@ -44,9 +43,8 @@ export default function MarketSection({ listingsLink }) {
           display: inline-block;
         }
         .listings-link:hover {
-          transform: translateY(-2px);
           opacity: 0.9;
-          text-decoration: none;
+          text-decoration: underline;
         }
       `}</style>
     </div>

@@ -13,10 +13,10 @@ import LoadingScreen from '@/components/common/LoadingScreen';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import ImageAndSummary from '@/components/results/ImageAndSummary';
 
-// This function should ideally be in `js/api.js` but is included here for clarity
+// This function now calls the primary Gemini endpoint
 const fetchBrakeBiasData = async (vehicle) => {
-    // This will call your active API endpoint (currently set to OpenAI)
-    const response = await fetch('/api/brake-bias-openai', {
+    // This will call your active API endpoint (now set to Gemini)
+    const response = await fetch('/api/brake-bias', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(vehicle),
@@ -76,7 +76,6 @@ function ResultsPageContent() {
     return <ErrorMessage message="No data was returned for this vehicle." />;
   }
 
-  // The return statement belongs inside the function like this
   return (
     <div className="results-page">
       <VehicleHeader

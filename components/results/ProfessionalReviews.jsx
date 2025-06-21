@@ -14,6 +14,13 @@ export default function ProfessionalReviews({ reviews }) {
             <h3 className="review-source">{review.source} ({review.review_year}) - <span className={`sentiment ${review.sentiment?.toLowerCase()}`}>{review.sentiment}</span></h3>
             <p className="review-snippet">"{review.text}"</p>
             {review.link && <a href={review.link} target="_blank" rel="noopener noreferrer" className="review-link">Read Full Review &rarr;</a>}
+            
+            {(review.keywords?.positive?.length > 0 || review.keywords?.negative?.length > 0) &&
+              <div className="keywords-container">
+                {review.keywords.positive?.map(k => <span key={k} className="tag positive">{k}</span>)}
+                {review.keywords.negative?.map(k => <span key={k} className="tag negative">{k}</span>)}
+              </div>
+            }
           </div>
         ))}
       </div>
@@ -62,6 +69,28 @@ export default function ProfessionalReviews({ reviews }) {
         }
         .review-link:hover {
           text-decoration: underline;
+        }
+        .keywords-container {
+          margin-top: 1rem;
+          padding-top: 1rem;
+          border-top: 1px solid var(--border);
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+        }
+        .tag {
+          padding: 0.25rem 0.75rem;
+          border-radius: 1rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+        }
+        .tag.positive {
+          background-color: #28a74520;
+          color: #28a745;
+        }
+        .tag.negative {
+          background-color: #dc354520;
+          color: #dc3545;
         }
       `}</style>
     </div>
