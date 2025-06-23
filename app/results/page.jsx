@@ -13,10 +13,10 @@ import MarketSection from '@/components/results/MarketSection';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import ImageAndSummary from '@/components/results/ImageAndSummary';
+import VideoReviews from '@/components/results/VideoReviews';
 
-// This function calls the Gemini endpoint
+// This function calls the primary API endpoint which uses Gemini first.
 const fetchBrakeBiasData = async (vehicle) => {
-    // Call the Gemini endpoint directly
     const response = await fetch('/api/brake-bias', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -91,6 +91,8 @@ function ResultsPageContent() {
           />
           <ProfessionalReviews reviews={data.reviews} />
           <RedditSentiment sentiment={data.ownerSentiment} />
+          {/* VideoReviews component moved to the end of the main content */}
+          <VideoReviews videos={data.videoReviews} />
         </div>
         <aside className="sidebar">
           <QuickStats
