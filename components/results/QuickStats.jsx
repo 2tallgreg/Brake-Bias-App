@@ -3,43 +3,67 @@ import React from 'react';
 import SpecsCard from './SpecsCard';
 
 export default function QuickStats({ engine_options, drivetrain, transmission_options }) {
-  // Check if the data is valid and not the "Data Not Available" sentinel.
-  const hasValidEngines = Array.isArray(engine_options) && engine_options.length > 0 && engine_options[0].name !== "Data Not Available";
-  const hasValidTransmissions = Array.isArray(transmission_options) && transmission_options.length > 0 && transmission_options[0] !== "Data Not Available";
-  const hasValidDrivetrain = drivetrain && drivetrain !== "Data Not Available";
 
-  // We now render all cards, but show a fallback message if data is invalid.
+  // A more robust helper function to render engine options
+  const renderEngineValue = () => {
+    // If the data is not a valid array, show fallback
+    if (!Array.isArray(engine_options) || engine_options.length === 0) {
+      return "Data Not Available";
+    }
+    // Check for the "Data Not Available" sentinel value in various forms
+    if ((typeof engine_options[0] === 'object' && engine_options[0]?.name === "Data Not Available") || engine_options[0] === "Data Not Available") {
+        return "Data Not Available";
+    }
+
+    // If data is valid, render it as a list
+    return (
+      <ul>
+        {engine_options.map((engine, i) => {
+          // This handles if the AI returns an object {name, specs} or just a string
+          if (typeof engine === 'object' && engine !== null && engine.name) {
+            return (
+              <li key={i}>
+                <strong>{engine.name}:</strong> {engine.specs}
+              </li>
+            );
+          }
+          if (typeof engine === 'string') {
+              return <li key={i}>{engine}</li>
+          }
+          return null; // Ignore any malformed items in the array
+        })}
+      </ul>
+    );
+  };
+
+  // A more robust helper for transmission options
+  const renderTransmissionValue = () => {
+    if (!Array.isArray(transmission_options) || transmission_options.length === 0 || transmission_options[0] === "Data Not Available") {
+      return "Data Not Available";
+    }
+    
+    return (
+      <ul>
+        {transmission_options.map((trans, i) => <li key={i}>{trans}</li>)}
+      </ul>
+    );
+  };
+
   return (
     <div className="quick-stats-container">
       <h2 className="section-title">Quick Stats</h2>
       <div className="stats-grid">
         <SpecsCard 
           label="Available Engines" 
-          value={
-            hasValidEngines ? (
-              <ul>
-                {engine_options.map((engine, i) => (
-                  <li key={i}>
-                    <strong>{engine.name}:</strong> {engine.specs}
-                  </li>
-                ))}
-              </ul>
-            ) : "Data Not Available"
-          } 
+          value={renderEngineValue()}
         />
         <SpecsCard 
           label="Drivetrain" 
-          value={hasValidDrivetrain ? drivetrain : "Data Not Available"}
+          value={drivetrain || "Data Not Available"}
         />
         <SpecsCard 
           label="Transmissions" 
-          value={
-            hasValidTransmissions ? (
-              <ul>
-                {transmission_options.map((trans, i) => <li key={i}>{trans}</li>)}
-              </ul>
-            ) : "Data Not Available"
-          }
+          value={renderTransmissionValue()}
         />
       </div>
       <style jsx>{`
@@ -55,7 +79,7 @@ export default function QuickStats({ engine_options, drivetrain, transmission_op
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
           gap: 1rem;
-          align-items: stretch; /* Makes cards in the same row equal height */
+          align-items: stretch;
         }
       `}</style>
     </div>
