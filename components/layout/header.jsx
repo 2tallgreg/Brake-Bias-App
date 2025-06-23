@@ -15,6 +15,7 @@ export default function Header() {
         <nav className="site-nav">
           <Link href="/about">About</Link>
           <Link href="/compare">Compare</Link>
+          <Link href="/feed">Feed</Link>
         </nav>
         <div className="theme-switcher-container">
             <ThemeSwitcher />

@@ -15,16 +15,19 @@ import ErrorMessage from '@/components/common/ErrorMessage';
 import ImageAndSummary from '@/components/results/ImageAndSummary';
 import VideoReviews from '@/components/results/VideoReviews';
 
-// This function calls the primary API endpoint which uses Gemini first.
+// This function now uses GET and passes data via URL params
 const fetchBrakeBiasData = async (vehicle) => {
-    const response = await fetch('/api/brake-bias', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(vehicle),
-    });
+    const params = new URLSearchParams(vehicle);
+    const response = await fetch(`/api/brake-bias?${params.toString()}`); // Use GET
     if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch data');
+        // Attempt to parse error, but have a fallback.
+        try {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch data');
+        } catch (e) {
+            // This catches non-JSON responses, like the "Unexpected end of JSON input"
+            throw new Error(response.statusText || 'An unknown server error occurred.');
+        }
     }
     return response.json();
 };
@@ -44,9 +47,12 @@ function ResultsPageContent() {
       zipcode: searchParams.get('zipcode'),
     };
 
+    // Filter out null/empty params before creating the vehicle string
+    const vehicleName = [vehicle.year, vehicle.make, vehicle.model, vehicle.submodel].filter(Boolean).join(' ');
+    
     if (vehicle.year && vehicle.make && vehicle.model) {
       setLoading(true);
-      fetchBrakeBiasData(vehicle)
+      fetchBrakeBiasData({ vehicle: vehicleName }) // Pass the single vehicle string
         .then(response => {
           setData(response);
           setError(null);
@@ -80,29 +86,28 @@ function ResultsPageContent() {
   return (
     <div className="results-page">
       <VehicleHeader
-        yearMakeModel={data.yearMakeModel}
+        yearMakeModel={data.vehicle}
         tldr={data.tldr}
       />
       <div className="grid-container">
         <div className="main-content">
           <ImageAndSummary 
-            imageUrl={data.wikimediaImageUrl}
-            summary={data.wikimediaSummary}
+            imageUrl={data.images?.imageUrl}
+            summary={data.summary}
           />
-          <ProfessionalReviews reviews={data.reviews} />
-          <RedditSentiment sentiment={data.ownerSentiment} />
-          {/* VideoReviews component moved to the end of the main content */}
+          <ProfessionalReviews reviews={data.professionalReviews} />
+          <RedditSentiment sentiment={data.redditSentiment} />
           <VideoReviews videos={data.videoReviews} />
         </div>
         <aside className="sidebar">
           <QuickStats
-            engine={data.engine}
-            drivetrain={data.drivetrain}
-            transmission={data.transmission}
+             engine_options={data.specs?.engine_options || [{ name: data.specs?.engine, specs: `${data.specs?.horsepower}, ${data.specs?.torque}`}]}
+             drivetrain={data.specs?.drivetrain}
+             transmission_options={data.specs ? [data.specs.transmission] : []}
           />
           <PricingSection 
-            msrp={data.msrp}
-            usedAvg={data.usedAvg}
+            msrp={data.pricing?.msrp}
+            usedAvg={data.pricing?.usedAvg}
           />
           <MarketSection listingsLink={data.autoTempestLink} />
         </aside>

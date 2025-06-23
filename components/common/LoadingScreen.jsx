@@ -1,82 +1,66 @@
 // components/common/LoadingScreen.jsx
-import React, { useState, useEffect } from 'react';
-import { funFacts } from '@/lib/constants';
+'use client';
+import { useEffect, useState } from 'react';
+import styled, { keyframes } from 'styled-components';
 
-export default function LoadingScreen() {
-  const [fact, setFact] = useState('');
+const ellipsis = keyframes`
+  to {
+    width: 1.25em;
+  }
+`;
 
-  useEffect(() => {
-    // Function to set a new random fact
-    const updateFact = () => {
-      const randomIndex = Math.floor(Math.random() * funFacts.length);
-      setFact(funFacts[randomIndex]);
-    };
+const SpinnerContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: var(--bg-primary);
+  z-index: 9999;
+`;
 
-    // Set the initial fact immediately
-    updateFact();
+const LoadingText = styled.p`
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-top: 1.5rem;
+  font-family: 'Roboto Mono', monospace;
 
-    // Set up an interval to change the fact every 5 seconds
-    const intervalId = setInterval(updateFact, 5000);
+  &:after {
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: bottom;
+    animation: ${ellipsis} steps(4, end) 1500ms infinite;
+    content: "\\2026"; /* ascii code for the ellipsis character */
+    width: 0px;
+  }
+`;
 
-    // Cleanup function to clear the interval when the component unmounts
-    return () => clearInterval(intervalId);
-  }, []);
+const CarSpinner = styled.div`
+  // Simple CSS spinner as a placeholder
+  border: 4px solid var(--border);
+  border-top: 4px solid var(--accent);
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
 
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+// --- The 'text' prop defaults to "Buffeting..." if not provided ---
+export default function LoadingScreen({ text = "Buffeting..." }) {
   return (
-    <div className="loading-container">
-      <div className="spinner"></div>
-      <p className="loading-text">Analyzing Data...</p>
-      {fact && (
-        <div className="fun-fact-container">
-          <p className="fun-fact-title">Did you know?</p>
-          <p className="fun-fact-text">{fact}</p>
-        </div>
-      )}
-
-      <style jsx>{`
-        .loading-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          min-height: 80vh;
-          padding: 1rem;
-        }
-        .spinner {
-          width: 50px;
-          height: 50px;
-          border: 5px solid var(--border);
-          border-top: 5px solid var(--primary);
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin-bottom: 1.5rem;
-        }
-        .loading-text {
-          font-weight: 500;
-          color: var(--text-secondary);
-          font-size: 1.25rem;
-        }
-        .fun-fact-container {
-          margin-top: 2rem;
-          padding: 1rem;
-          max-width: 500px;
-          text-align: center;
-          border-top: 1px solid var(--border);
-        }
-        .fun-fact-title {
-          font-weight: 600;
-          color: var(--text-secondary);
-          margin-bottom: 0.5rem;
-        }
-        .fun-fact-text {
-          font-style: italic;
-          color: var(--text-tertiary);
-        }
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
-    </div>
+    <SpinnerContainer>
+      <CarSpinner />
+      <LoadingText>{text}</LoadingText>
+    </SpinnerContainer>
   );
 }
