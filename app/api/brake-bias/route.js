@@ -18,9 +18,33 @@ const processSettledPromise = (result, sourceName) => {
     return null; // Return null for failed sources
 };
 
+// Helper function to create AutoTempest link
+const createAutoTempestLink = (vehicleString, zipcode) => {
+    const parts = vehicleString.split(' ');
+    const year = parts[0];
+    const make = parts[1];
+    const modelAndSubmodel = parts.slice(2).join(' ');
+
+    const params = {
+        make,
+        model: modelAndSubmodel,
+        minyear: year,
+        maxyear: year,
+    };
+    
+    if (zipcode) {
+        params.zip = zipcode;
+        params.radius = 200;
+    }
+
+    return `https://www.autotempest.com/results?${new URLSearchParams(params).toString()}`;
+}
+
+
 export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const vehicle = searchParams.get('vehicle');
+    const zipcode = searchParams.get('zipcode');
 
     if (!vehicle) {
         return NextResponse.json({ error: 'Vehicle query parameter is required.' }, { status: 400 });
@@ -36,6 +60,9 @@ export async function GET(request) {
     console.log(`[Cache] MISS for ${vehicle}`);
 
     try {
+        // Generate AutoTempest Link
+        const autoTempestLink = createAutoTempestLink(vehicle, zipcode);
+
         // --- Parallel Data Fetching ---
         const [
             reviewsResult,
@@ -62,7 +89,6 @@ export async function GET(request) {
         const videoReviews = processSettledPromise(videoReviewsResult, 'Video Reviews');
 
         // --- Final Aggregation & Summary ---
-        // The summary generation now depends on the results of the parallel fetches
         const summaryData = {
             vehicle,
             professionalReviews,
@@ -83,6 +109,7 @@ export async function GET(request) {
             images,
             videoReviews,
             specs,
+            autoTempestLink, // Include the AutoTempest link
         };
 
         setCache(cacheKey, responseData);

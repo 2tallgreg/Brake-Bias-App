@@ -15,17 +15,19 @@ import ErrorMessage from '@/components/common/ErrorMessage';
 import ImageAndSummary from '@/components/results/ImageAndSummary';
 import VideoReviews from '@/components/results/VideoReviews';
 
-// This function now uses GET and passes data via URL params
-const fetchBrakeBiasData = async (vehicle) => {
-    const params = new URLSearchParams(vehicle);
-    const response = await fetch(`/api/brake-bias?${params.toString()}`); // Use GET
+// This function now POSTs to the primary AI endpoint
+const fetchBrakeBiasData = async (vehicleDetails) => {
+    const response = await fetch(`/api/brake-bias-openai`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(vehicleDetails),
+    });
+
     if (!response.ok) {
-        // Attempt to parse error, but have a fallback.
         try {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to fetch data');
+            throw new Error(errorData.error || 'Failed to fetch data from the Brake Bias AI API.');
         } catch (e) {
-            // This catches non-JSON responses, like the "Unexpected end of JSON input"
             throw new Error(response.statusText || 'An unknown server error occurred.');
         }
     }
@@ -43,16 +45,13 @@ function ResultsPageContent() {
       year: searchParams.get('year'),
       make: searchParams.get('make'),
       model: searchParams.get('model'),
-      submodel: searchParams.get('submodel'),
-      zipcode: searchParams.get('zipcode'),
+      submodel: searchParams.get('submodel') || '', // Ensure submodel is not null
+      zipcode: searchParams.get('zipcode') || '', // Ensure zipcode is not null
     };
 
-    // Filter out null/empty params before creating the vehicle string
-    const vehicleName = [vehicle.year, vehicle.make, vehicle.model, vehicle.submodel].filter(Boolean).join(' ');
-    
     if (vehicle.year && vehicle.make && vehicle.model) {
       setLoading(true);
-      fetchBrakeBiasData({ vehicle: vehicleName }) // Pass the single vehicle string
+      fetchBrakeBiasData(vehicle)
         .then(response => {
           setData(response);
           setError(null);
@@ -72,7 +71,7 @@ function ResultsPageContent() {
   }, [searchParams]);
 
   if (loading) {
-    return <LoadingScreen />;
+    return <LoadingScreen text="Analyzing the data..." />;
   }
 
   if (error) {
@@ -83,31 +82,32 @@ function ResultsPageContent() {
     return <ErrorMessage message="No data was returned for this vehicle." />;
   }
 
+  // Map the new, unified data structure to the components
   return (
     <div className="results-page">
       <VehicleHeader
-        yearMakeModel={data.vehicle}
+        yearMakeModel={data.yearMakeModel}
         tldr={data.tldr}
       />
       <div className="grid-container">
         <div className="main-content">
           <ImageAndSummary 
-            imageUrl={data.images?.imageUrl}
+            imageUrl={data.wikimediaImageUrl}
             summary={data.summary}
           />
-          <ProfessionalReviews reviews={data.professionalReviews} />
-          <RedditSentiment sentiment={data.redditSentiment} />
+          <ProfessionalReviews reviews={data.reviews} />
+          <RedditSentiment sentiment={data.ownerSentiment} />
           <VideoReviews videos={data.videoReviews} />
         </div>
         <aside className="sidebar">
           <QuickStats
-             engine_options={data.specs?.engine_options || [{ name: data.specs?.engine, specs: `${data.specs?.horsepower}, ${data.specs?.torque}`}]}
-             drivetrain={data.specs?.drivetrain}
-             transmission_options={data.specs ? [data.specs.transmission] : []}
+             engine={data.engine}
+             drivetrain={data.drivetrain}
+             transmission={data.transmission}
           />
           <PricingSection 
-            msrp={data.pricing?.msrp}
-            usedAvg={data.pricing?.usedAvg}
+            msrp={data.msrp}
+            usedAvg={data.usedAvg}
           />
           <MarketSection listingsLink={data.autoTempestLink} />
         </aside>
@@ -140,7 +140,7 @@ function ResultsPageContent() {
 
 export default function ResultsPage() {
     return (
-        <Suspense fallback={<LoadingScreen />}>
+        <Suspense fallback={<LoadingScreen text="Analyzing the data..." />}>
             <ResultsPageContent />
         </Suspense>
     )
